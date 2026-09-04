@@ -5,7 +5,18 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export const CATEGORIES = ['Blusas', 'Calças', 'Vestidos', 'Saias', 'Acessórios', 'Outros'] as const;
+export const CATEGORIES = [
+  'Acessórios',
+  'Bermudas',
+  'Blusas',
+  'Calças',
+  'Casacos',
+  'Conjuntos',
+  'Jaquetas',
+  'Saias',
+  'Shorts',
+  'Vestidos',
+] as const;
 export type Category = (typeof CATEGORIES)[number];
 
 export type Product = {

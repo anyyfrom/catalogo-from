@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import type { ProductWithImages } from '@/lib/supabase';
+import { CATEGORIES, type ProductWithImages } from '@/lib/supabase';
 
 function formatPrice(price: number) {
   return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -11,13 +11,13 @@ function formatPrice(price: number) {
 function PriceTag({ price, originalPrice }: { price: number; originalPrice: number | null }) {
   if (originalPrice && originalPrice > price) {
     return (
-      <div className="flex flex-shrink-0 flex-col items-end whitespace-nowrap">
+      <div className="flex flex-wrap items-baseline gap-2">
         <span className="font-body text-xs text-muted line-through">{formatPrice(originalPrice)}</span>
         <span className="font-body text-sm text-wine">{formatPrice(price)}</span>
       </div>
     );
   }
-  return <p className="whitespace-nowrap font-body text-sm text-wine">{formatPrice(price)}</p>;
+  return <p className="font-body text-sm text-wine">{formatPrice(price)}</p>;
 }
 
 function ProductCard({ product }: { product: ProductWithImages }) {
@@ -77,30 +77,35 @@ function ProductCard({ product }: { product: ProductWithImages }) {
           </>
         )}
       </div>
-      <div className="mt-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-display text-lg text-ink">{product.name}</h2>
-          {product.description && (
-            <p className="mt-1 max-w-[42ch] whitespace-pre-line font-body text-sm leading-relaxed text-muted">
-              {product.description}
-            </p>
-          )}
+      <div className="mt-4">
+        <h2 className="font-display text-lg text-ink">{product.name}</h2>
+        {product.description && (
+          <p className="mt-1 whitespace-pre-line font-body text-sm leading-relaxed text-muted">
+            {product.description}
+          </p>
+        )}
+        <div className="mt-2">
+          <PriceTag price={product.price} originalPrice={product.original_price} />
         </div>
-        <PriceTag price={product.price} originalPrice={product.original_price} />
       </div>
     </article>
   );
 }
 
 export default function CatalogGrid({ products }: { products: ProductWithImages[] }) {
-  const categories = useMemo(() => {
-    const present = new Set(products.map((p) => p.category));
-    return Array.from(present);
-  }, [products]);
-
   const [selected, setSelected] = useState<string>('Todos');
+  const [query, setQuery] = useState('');
 
-  const filtered = selected === 'Todos' ? products : products.filter((p) => p.category === selected);
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const filtered = products.filter((p) => {
+    const matchesCategory = selected === 'Todos' || p.category === selected;
+    const matchesQuery =
+      normalizedQuery === '' ||
+      p.name.toLowerCase().includes(normalizedQuery) ||
+      p.description.toLowerCase().includes(normalizedQuery);
+    return matchesCategory && matchesQuery;
+  });
 
   if (products.length === 0) {
     return (
@@ -115,28 +120,36 @@ export default function CatalogGrid({ products }: { products: ProductWithImages[
 
   return (
     <div>
-      {categories.length > 1 && (
-        <div className="mb-10 flex flex-wrap gap-2">
-          {['Todos', ...categories].map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setSelected(cat)}
-              className={`border px-4 py-1.5 font-body text-sm transition-colors ${
-                selected === cat
-                  ? 'border-ink bg-ink text-ivory'
-                  : 'border-line text-muted hover:border-ink hover:text-ink'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="mb-6">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar peça pelo nome…"
+          className="w-full max-w-sm border border-line bg-transparent px-3 py-2 font-body text-sm text-ink focus:border-wine"
+        />
+      </div>
+
+      <div className="mb-10 flex flex-wrap gap-2">
+        {['Todos', ...CATEGORIES].map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setSelected(cat)}
+            className={`border px-4 py-1.5 font-body text-sm transition-colors ${
+              selected === cat
+                ? 'border-ink bg-ink text-ivory'
+                : 'border-line text-muted hover:border-ink hover:text-ink'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
 
       {filtered.length === 0 ? (
         <div className="border border-dashed border-line py-24 text-center">
-          <p className="font-display text-xl italic text-muted">Nenhuma peça nesta categoria.</p>
+          <p className="font-display text-xl italic text-muted">Nenhuma peça encontrada.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-14 lg:grid-cols-3">
