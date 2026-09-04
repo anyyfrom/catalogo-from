@@ -16,8 +16,8 @@ module.exports = {
         muted: '#8A8578',
       },
       fontFamily: {
-        display: ['var(--font-fraunces)', 'Georgia', 'serif'],
-        body: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        display: ['"Times New Roman"', 'Times', 'serif'],
+        body: ['"Times New Roman"', 'Times', 'serif'],
       },
     },
   },
